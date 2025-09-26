@@ -1,0 +1,15 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "18"
+  AIDIS_API_URL = "http://localhost:8080"
+
+[[redirects]]
+  from = "/api/aidis/*"
+  to = "http://localhost:8080/mcp/tools/:splat"
+  status = 200
+
+[functions]
+  node_bundler = "esbuild"
