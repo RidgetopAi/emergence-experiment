@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Timeline } from '@/components/timeline/Timeline';
 import { EntryCard } from '@/components/timeline/EntryCard';
 import { PhaseSelector } from '@/components/timeline/PhaseSelector';
+import { AdminPanel } from '@/components/AdminPanel';
 import { useEmergenceEntries, useEmergenceStatistics, useAidisConnection, useRefreshEntries } from '@/lib/queries';
 import { useTimelineStore, usePhaseEntries } from '@/stores/timeline';
 import { cn } from '@/lib/utils';
@@ -174,6 +175,11 @@ export function TimelineExplorer() {
             onPhaseSelect={setSelectedPhase}
             entryCounts={entryCounts}
           />
+        </div>
+
+        {/* Admin Panel */}
+        <div className="mb-8">
+          <AdminPanel aidisConnected={aidisConnected} />
         </div>
 
         {/* Timeline */}
