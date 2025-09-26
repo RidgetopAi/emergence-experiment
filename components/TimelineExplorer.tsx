@@ -216,7 +216,7 @@ export function TimelineExplorer() {
           </div>
 
           {/* Selected Entry Detail */}
-          <div className="sticky top-24">
+          <div className="sticky top-24 sm:top-22 lg:top-20">
             {selectedEntryData ? (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -225,7 +225,7 @@ export function TimelineExplorer() {
                 <EntryCard
                   entry={selectedEntryData}
                   showPreview={false}
-                  className="max-h-[calc(100vh-200px)] overflow-y-auto"
+                  className="max-h-[800px] sm:max-h-[900px] lg:max-h-[1000px] overflow-y-auto"
                 />
               </div>
             ) : (
