@@ -54,7 +54,7 @@ async function fetchFromAidis(): Promise<Entry[] | null> {
 
       for (const block of entryBlocks) {
         // Extract the content portion after "Content:"
-        const contentMatch = block.match(/Content:\s*(.*?)(?=\n   Tags:|$)/s);
+        const contentMatch = block.match(/Content:\s*([\s\S]*?)(?=\n   Tags:|$)/);
         if (contentMatch) {
           const content = contentMatch[1].trim();
 
