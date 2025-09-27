@@ -3,69 +3,76 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import type { Entry, EmergenceApiResponse } from '@/types';
 
-// Reuse the same AIDIS fetching logic from entries route
+// Use AIDIS context_get_recent to get individual emergence-notes project entries
 async function fetchFromAidis(): Promise<Entry[] | null> {
   try {
     const aidisUrl = process.env.AIDIS_API_URL || 'http://localhost:8080';
 
-    // Use context_search with project name for emergence-notes
-    const response = await fetch(`${aidisUrl}/mcp/tools/context_search`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        arguments: {
-          query: 'project:emergence-notes',
-          limit: 30 // Get all emergence-notes entries (20 + extra buffer)
-        }
-      }),
-      signal: AbortSignal.timeout(10000)
-    });
-
-    if (!response.ok) {
-      console.warn('AIDIS context_search failed:', response.status, response.statusText);
-      return null;
-    }
-
-    const aidisData = await response.json();
-
-    if (!aidisData.success || !aidisData.result?.content) {
-      console.warn('AIDIS response invalid:', aidisData);
-      return null;
-    }
-
-    console.log('AIDIS upload: found', aidisData.result.content.length, 'contexts');
-
-    const entries: Entry[] = [];
+    // Use context_get_recent to get individual entries (multiple calls for full coverage)
+    const allEntries: Entry[] = [];
     const processedEntries = new Set<number>();
 
-    // Process contexts from the response - handle context_search format
-    for (const contextItem of aidisData.result.content) {
-      if (contextItem.type === 'text' && contextItem.text) {
-        const content = contextItem.text;
-
-        // For context_search, we get search results with numbered entries
-        if (content.startsWith('🔍 Found')) {
-          // Parse search results - split by numbered entries (1. 2. 3. etc.)
-          const entryBlocks = content.split(/\n\n\d+\.\s+\*\*[A-Z]+\*\*/).slice(1);
-
-          for (const block of entryBlocks) {
-            // Extract the actual content after the 📝 marker
-            const contentMatch = block.match(/📝\s+"([^"]+)"/);
-            if (contentMatch && contentMatch[1]) {
-              processCompleteEntry(contentMatch[1], entries, processedEntries);
-            }
+    // Make multiple calls to get more entries (context_get_recent limited to 20)
+    for (let offset = 0; offset < 100; offset += 20) {
+      const response = await fetch(`${aidisUrl}/mcp/tools/context_get_recent`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          arguments: {
+            limit: 20
           }
-        } else {
-          // Process individual entries directly (old format)
-          processCompleteEntry(content, entries, processedEntries);
+        }),
+        signal: AbortSignal.timeout(10000)
+      });
+
+      if (!response.ok) {
+        console.warn(`AIDIS context_get_recent failed (offset ${offset}):`, response.status, response.statusText);
+        break;
+      }
+
+      const aidisData = await response.json();
+
+      if (!aidisData.success || !aidisData.result?.content || !aidisData.result.content[0]?.text) {
+        console.warn(`AIDIS response invalid (offset ${offset}):`, aidisData);
+        break;
+      }
+
+      // Parse the summary format: "📋 Recent Contexts (X found)" followed by numbered entries
+      const fullText = aidisData.result.content[0].text;
+
+      if (!fullText.includes('📋 Recent Contexts')) {
+        console.warn('Unexpected context_get_recent format');
+        break;
+      }
+
+      // Split by numbered entries (e.g., "1. **type**", "2. **type**")
+      const entryBlocks = fullText.split(/(?=^\d+\.\s+\*\*[^*]+\*\*)/m).slice(1);
+
+      console.log(`AIDIS upload: found ${entryBlocks.length} context blocks in batch ${offset/20 + 1}`);
+
+      for (const block of entryBlocks) {
+        // Extract the content portion after "Content:"
+        const contentMatch = block.match(/Content:\s*(.*?)(?=\n   Tags:|$)/s);
+        if (contentMatch) {
+          const content = contentMatch[1].trim();
+
+          // Filter for emergence-notes content
+          if (content.includes('emergence') || content.includes('Claude') || content.includes('entry')) {
+            processCompleteEntry(content, allEntries, processedEntries);
+          }
         }
+      }
+
+      // If we got fewer than 20 entries, we've reached the end
+      if (entryBlocks.length < 20) {
+        break;
       }
     }
 
-    console.log('Processed AIDIS entries for upload:', entries.length);
-    return entries.sort((a, b) => a.entryNumber - b.entryNumber);
+    console.log('Processed AIDIS entries for upload:', allEntries.length);
+    return allEntries.sort((a, b) => a.entryNumber - b.entryNumber);
   } catch (error) {
     console.warn('AIDIS upload fetch failed:', error);
     return null;
