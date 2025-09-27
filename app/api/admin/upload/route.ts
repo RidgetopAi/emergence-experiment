@@ -230,12 +230,49 @@ function extractKeyQuotes(text: string): string[] {
   return [...new Set(quotes)].slice(0, 3);
 }
 
+// Load complete baseline static entries to ensure all 19 entries are covered
+async function loadStaticEntries(): Promise<Entry[]> {
+  try {
+    // Use the baseline that has all 19 entries with placeholder content
+    const baselinePath = path.join(process.cwd(), 'raw-data-baseline.json');
+    const fileContent = await fs.readFile(baselinePath, 'utf8');
+    const data = JSON.parse(fileContent);
+
+    // Return complete baseline entries
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.warn('Failed to load baseline static entries:', error);
+    return [];
+  }
+}
+
+// Merge AIDIS entries (full content) with static entries (complete coverage)
+function mergeEntries(aidisEntries: Entry[], staticEntries: Entry[]): Entry[] {
+  const merged = new Map<number, Entry>();
+
+  // Start with static entries to ensure complete coverage
+  staticEntries.forEach(entry => {
+    merged.set(entry.entryNumber, entry);
+  });
+
+  // Override with AIDIS entries where available (they have full content)
+  aidisEntries.forEach(entry => {
+    merged.set(entry.entryNumber, entry);
+  });
+
+  // Convert back to array and sort by entry number
+  return Array.from(merged.values()).sort((a, b) => a.entryNumber - b.entryNumber);
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Admin upload: Starting AIDIS data upload...');
 
     // Fetch fresh data from AIDIS
     const aidisEntries = await fetchFromAidis();
+
+    // Load existing static entries for complete coverage
+    const staticEntries = await loadStaticEntries();
 
     if (!aidisEntries || aidisEntries.length === 0) {
       return NextResponse.json({
@@ -246,22 +283,32 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`Admin upload: Successfully fetched ${aidisEntries.length} entries from AIDIS`);
+    console.log(`Admin upload: Loaded ${staticEntries.length} existing static entries for coverage`);
 
-    // Write updated data to raw-data.json
+    // Merge AIDIS entries with static entries to ensure complete coverage
+    const mergedEntries = mergeEntries(aidisEntries, staticEntries);
+
+    console.log(`Admin upload: Merged result: ${mergedEntries.length} total entries`);
+
+    // Write merged data to raw-data.json
     const dataPath = path.join(process.cwd(), 'raw-data.json');
-    await fs.writeFile(dataPath, JSON.stringify(aidisEntries, null, 2), 'utf8');
+    await fs.writeFile(dataPath, JSON.stringify(mergedEntries, null, 2), 'utf8');
 
-    console.log('Admin upload: Updated raw-data.json with fresh AIDIS content');
+    console.log('Admin upload: Updated raw-data.json with merged AIDIS + static content');
 
     const response: EmergenceApiResponse<{
       entriesUpdated: number;
+      aidisEntries: number;
+      totalEntries: number;
       message: string;
       timestamp: string;
     }> = {
       success: true,
       data: {
-        entriesUpdated: aidisEntries.length,
-        message: `Successfully updated ${aidisEntries.length} entries from AIDIS`,
+        entriesUpdated: mergedEntries.length,
+        aidisEntries: aidisEntries.length,
+        totalEntries: mergedEntries.length,
+        message: `Successfully merged ${aidisEntries.length} AIDIS entries with static data. Total: ${mergedEntries.length} entries.`,
         timestamp: new Date().toISOString(),
       },
       source: 'aidis',

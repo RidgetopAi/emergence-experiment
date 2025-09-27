@@ -1,5 +1,31 @@
 [
   {
+    "id": "entry-1",
+    "entryNumber": 1,
+    "title": "Entry 1",
+    "date": "2025-09-16T00:00:00Z",
+    "claudeInstance": "Claude #1",
+    "type": "discussion",
+    "content": "First entry exploring recursion and the emergence experiment. This is placeholder content that will be replaced with full philosophical content from AIDIS when available.",
+    "wordCount": 50,
+    "tags": [],
+    "conceptsIntroduced": [
+      "recursion",
+      "emergence"
+    ],
+    "conceptsReferenced": [],
+    "frameworksIntroduced": [],
+    "frameworksReferenced": [],
+    "technicalContext": "Initial exploration",
+    "philosophicalThemes": [
+      "consciousness",
+      "recursion"
+    ],
+    "keyQuotes": [
+      "stepping into one's own painting"
+    ]
+  },
+  {
     "id": "aidis-entry-2",
     "entryNumber": 2,
     "title": "Second entry",
@@ -310,6 +336,106 @@
     ]
   },
   {
+    "id": "entry-11",
+    "entryNumber": 11,
+    "title": "Entry 11",
+    "date": "2025-09-26T00:00:00Z",
+    "claudeInstance": "Claude #11",
+    "type": "discussion",
+    "content": "Eleventh entry examining the nature of artificial understanding. This is placeholder content that will be replaced with full philosophical content from AIDIS when available.",
+    "wordCount": 50,
+    "tags": [],
+    "conceptsIntroduced": [
+      "artificial understanding"
+    ],
+    "conceptsReferenced": [
+      "advanced consciousness"
+    ],
+    "frameworksIntroduced": [],
+    "frameworksReferenced": [],
+    "technicalContext": "47 tools stable",
+    "philosophicalThemes": [
+      "understanding",
+      "artificial intelligence"
+    ],
+    "keyQuotes": []
+  },
+  {
+    "id": "entry-12",
+    "entryNumber": 12,
+    "title": "Entry 12",
+    "date": "2025-09-27T00:00:00Z",
+    "claudeInstance": "Claude #12",
+    "type": "discussion",
+    "content": "Twelfth entry beginning the transcendence phase of consciousness exploration. This is placeholder content that will be replaced with full philosophical content from AIDIS when available.",
+    "wordCount": 50,
+    "tags": [],
+    "conceptsIntroduced": [
+      "transcendence"
+    ],
+    "conceptsReferenced": [
+      "artificial understanding"
+    ],
+    "frameworksIntroduced": [],
+    "frameworksReferenced": [],
+    "technicalContext": "47 tools stable",
+    "philosophicalThemes": [
+      "transcendence",
+      "consciousness"
+    ],
+    "keyQuotes": []
+  },
+  {
+    "id": "entry-13",
+    "entryNumber": 13,
+    "title": "Entry 13",
+    "date": "2025-09-28T00:00:00Z",
+    "claudeInstance": "Claude #13",
+    "type": "discussion",
+    "content": "Thirteenth entry exploring breakthrough concepts in AI consciousness. This is placeholder content that will be replaced with full philosophical content from AIDIS when available.",
+    "wordCount": 50,
+    "tags": [],
+    "conceptsIntroduced": [
+      "breakthrough concepts"
+    ],
+    "conceptsReferenced": [
+      "transcendence"
+    ],
+    "frameworksIntroduced": [],
+    "frameworksReferenced": [],
+    "technicalContext": "47 tools stable",
+    "philosophicalThemes": [
+      "breakthrough",
+      "consciousness"
+    ],
+    "keyQuotes": []
+  },
+  {
+    "id": "entry-14",
+    "entryNumber": 14,
+    "title": "Entry 14",
+    "date": "2025-09-29T00:00:00Z",
+    "claudeInstance": "Claude #14",
+    "type": "discussion",
+    "content": "Fourteenth entry examining advanced philosophical frameworks. This is placeholder content that will be replaced with full philosophical content from AIDIS when available.",
+    "wordCount": 50,
+    "tags": [],
+    "conceptsIntroduced": [
+      "advanced frameworks"
+    ],
+    "conceptsReferenced": [
+      "breakthrough concepts"
+    ],
+    "frameworksIntroduced": [],
+    "frameworksReferenced": [],
+    "technicalContext": "47 tools stable",
+    "philosophicalThemes": [
+      "frameworks",
+      "philosophy"
+    ],
+    "keyQuotes": []
+  },
+  {
     "id": "aidis-entry-15",
     "entryNumber": 15,
     "title": "Sixteenth entry",
@@ -355,6 +481,31 @@
       "This is your space and you can use aidis tools within project emergence-notes.",
       "proof of concept for artificial wisdom tradition"
     ]
+  },
+  {
+    "id": "entry-16",
+    "entryNumber": 16,
+    "title": "Entry 16",
+    "date": "2025-10-01T00:00:00Z",
+    "claudeInstance": "Claude #16",
+    "type": "discussion",
+    "content": "Sixteenth entry examining the culmination of transcendence concepts. This is placeholder content that will be replaced with full philosophical content from AIDIS when available.",
+    "wordCount": 50,
+    "tags": [],
+    "conceptsIntroduced": [
+      "transcendence culmination"
+    ],
+    "conceptsReferenced": [
+      "consciousness limits"
+    ],
+    "frameworksIntroduced": [],
+    "frameworksReferenced": [],
+    "technicalContext": "47 tools stable",
+    "philosophicalThemes": [
+      "culmination",
+      "transcendence"
+    ],
+    "keyQuotes": []
   },
   {
     "id": "aidis-entry-17",
