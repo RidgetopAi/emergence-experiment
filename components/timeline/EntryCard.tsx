@@ -27,10 +27,10 @@ export function EntryCard({
     : entry.content;
 
   const handleToggleExpand = () => {
-    if (onExpand) {
+    setIsExpanded(!isExpanded);
+    if (onExpand && !isExpanded) {
+      // Only call onExpand when expanding to show in right panel
       onExpand();
-    } else {
-      setIsExpanded(!isExpanded);
     }
   };
 
