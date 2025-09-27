@@ -156,21 +156,36 @@ export function useEmergenceStatistics() {
         end: entries[entries.length - 1]?.date,
       };
 
-      const phases = {
-        discovery: entries.filter(e => e.entryNumber <= 5).length,
-        formalization: entries.filter(e => e.entryNumber >= 6 && e.entryNumber <= 11).length,
-        transcendence: entries.filter(e => e.entryNumber >= 12 && e.entryNumber <= 16).length,
-        symbiosis: entries.filter(e => e.entryNumber >= 17).length,
-      };
+      // Calculate tag frequency
+      const tagCounts: Record<string, number> = {};
+      entries.forEach(entry => {
+        entry.tags.forEach(tag => {
+          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
+      });
+
+      // Get top 10 most frequent tags
+      const topTags = Object.entries(tagCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 10)
+        .map(([tag, count]) => ({ tag, count }));
+
+      // Calculate content completeness
+      const entriesWithFullContent = entries.filter(e => e.wordCount > 100).length;
+      const entriesWithPlaceholderContent = entries.filter(e => e.wordCount <= 100).length;
 
       return {
         totalEntries,
         totalWords,
         averageWords,
-        frameworkCount: frameworks.size,
         conceptCount: concepts.size,
         dateRange,
-        phases,
+        topTags,
+        contentCompleteness: {
+          full: entriesWithFullContent,
+          placeholder: entriesWithPlaceholderContent,
+          percentage: Math.round((entriesWithFullContent / totalEntries) * 100)
+        },
         lastUpdated: new Date().toISOString(),
       };
     },

@@ -40,24 +40,18 @@ async function fetchFromAidis(): Promise<Entry[] | null> {
     const entries: Entry[] = [];
     const processedEntries = new Set<number>();
 
-    // Process contexts from the response text
+    // Process contexts from the response - look for individual entries, not search results
     for (const contextItem of aidisData.result.content) {
       if (contextItem.type === 'text' && contextItem.text) {
-        const contextText = contextItem.text;
+        const content = contextItem.text;
 
-        // Split by context entries (pattern: number. **type** (time ago))
-        const contextBlocks = contextText.split(/\n\n\d+\.\s+\*\*\w+\*\*\s+\([^)]+\)/).slice(1);
-
-        for (const block of contextBlocks) {
-          // Extract content after "Content: " line
-          const contentMatch = block.match(/Content:\s*([\s\S]*?)(?:\n\s*Tags:|$)/);
-          if (contentMatch && contentMatch[1]) {
-            const fullContent = contentMatch[1].trim();
-
-            // Process this as a complete entry
-            processCompleteEntry(fullContent, entries, processedEntries);
-          }
+        // Skip search result summaries (they start with "🔍 Found")
+        if (content.startsWith('🔍 Found')) {
+          continue;
         }
+
+        // Process individual entries directly
+        processCompleteEntry(content, entries, processedEntries);
       }
     }
 
