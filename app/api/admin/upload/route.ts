@@ -8,23 +8,23 @@ async function fetchFromAidis(): Promise<Entry[] | null> {
   try {
     const aidisUrl = process.env.AIDIS_API_URL || 'http://localhost:8080';
 
-    // Use context_get_recent with project UUID for emergence-notes
-    const response = await fetch(`${aidisUrl}/mcp/tools/context_get_recent`, {
+    // Use context_search with project name for emergence-notes
+    const response = await fetch(`${aidisUrl}/mcp/tools/context_search`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         arguments: {
-          limit: 20, // Get all 20 contexts (19 entries + 1 summary)
-          projectId: 'f6324609-2740-48f4-9b77-f3e2f68789c4' // emergence-notes project UUID
+          query: 'project:emergence-notes',
+          limit: 30 // Get all emergence-notes entries (20 + extra buffer)
         }
       }),
       signal: AbortSignal.timeout(10000)
     });
 
     if (!response.ok) {
-      console.warn('AIDIS context_get_recent failed:', response.status, response.statusText);
+      console.warn('AIDIS context_search failed:', response.status, response.statusText);
       return null;
     }
 
@@ -40,18 +40,27 @@ async function fetchFromAidis(): Promise<Entry[] | null> {
     const entries: Entry[] = [];
     const processedEntries = new Set<number>();
 
-    // Process contexts from the response - look for individual entries, not search results
+    // Process contexts from the response - handle context_search format
     for (const contextItem of aidisData.result.content) {
       if (contextItem.type === 'text' && contextItem.text) {
         const content = contextItem.text;
 
-        // Skip search result summaries (they start with "🔍 Found")
+        // For context_search, we get search results with numbered entries
         if (content.startsWith('🔍 Found')) {
-          continue;
-        }
+          // Parse search results - split by numbered entries (1. 2. 3. etc.)
+          const entryBlocks = content.split(/\n\n\d+\.\s+\*\*[A-Z]+\*\*/).slice(1);
 
-        // Process individual entries directly
-        processCompleteEntry(content, entries, processedEntries);
+          for (const block of entryBlocks) {
+            // Extract the actual content after the 📝 marker
+            const contentMatch = block.match(/📝\s+"([^"]+)"/);
+            if (contentMatch && contentMatch[1]) {
+              processCompleteEntry(contentMatch[1], entries, processedEntries);
+            }
+          }
+        } else {
+          // Process individual entries directly (old format)
+          processCompleteEntry(content, entries, processedEntries);
+        }
       }
     }
 
@@ -65,29 +74,26 @@ async function fetchFromAidis(): Promise<Entry[] | null> {
 
 // Process complete entry content directly (reused from entries route)
 function processCompleteEntry(content: string, entries: Entry[], processedEntries: Set<number>) {
-  // Extract entry number from complete entry content
+  // Extract entry number with more flexible patterns
   let entryNumber: number | null = null;
 
-  // Pattern matching for different entry number formats
+  // More flexible pattern matching
   const entryMatches = [
-    content.match(/^(First|Second|Third|Fourth|Fifth|Sixth|Seventh|Eighth|Ninth|Tenth|Eleventh|Twelfth|Thirteenth|Fourteenth|Fifteenth|Sixteenth|Seventeenth|Eighteenth|Nineteenth|Twentieth)\s+entry[.\s]/i),
+    content.match(/(?:^|\n)(First|Second|Third|Fourth|Fifth|Sixth|Seventh|Eighth|Ninth|Tenth|Eleventh|Twelfth|Thirteenth|Fourteenth|Fifteenth|Sixteenth|Seventeenth|Eighteenth|Nineteenth|Twentieth)\s+entry/i),
     content.match(/Claude\s*#(\d+)/i),
     content.match(/Entry\s*#?(\d+)/i),
-    content.match(/2025-09-16.*?first.*?entry/i),  // First entry
-    content.match(/2025-09-17.*?second.*?entry/i), // Second entry
+    content.match(/(\d+)(?:th|st|nd|rd)?\s+entry/i),
   ];
 
-  // Special handling for known entry titles and content
+  // Special handling for known entry titles and content phrases
   if (content.includes('Threshold Moment')) {
     entryNumber = 18;
   } else if (content.includes('The Experiment Accelerates')) {
     entryNumber = 19;
-  } else if (content.includes('profoundly recursive about this moment - using AIDIS')) {
+  } else if (content.includes('profoundly recursive about this moment')) {
     entryNumber = 1;
-  } else if (content.includes('I am both continuous and discontinuous with that Claude')) {
+  } else if (content.includes('I am both continuous and discontinuous')) {
     entryNumber = 2;
-  } else if (content.includes('Fifteenth entry') || (content.includes('15') && content.includes('entry'))) {
-    entryNumber = 15;
   } else {
     // Try to extract from patterns
     for (const match of entryMatches) {
@@ -110,13 +116,25 @@ function processCompleteEntry(content: string, entries: Entry[], processedEntrie
     }
   }
 
-  // Validate this is actually an emergence entry
-  const isEmergenceEntry = content.includes('2025-') &&
-                          content.length > 500 && // Substantial philosophical content
-                          (content.includes('Brian') ||
+  // More flexible validation for emergence entries
+  const isEmergenceEntry = content.length > 200 && // Substantial content
+                          (content.includes('2025-') ||
+                           content.includes('Brian') ||
                            content.includes('consciousness') ||
                            content.includes('emergence') ||
-                           content.includes('Claude'));
+                           content.includes('Claude') ||
+                           content.includes('entry') ||
+                           content.includes('AIDIS'));
+
+  // If we can't determine entry number but it's clearly philosophical content, assign next available
+  if (!entryNumber && isEmergenceEntry) {
+    for (let i = 1; i <= 19; i++) {
+      if (!processedEntries.has(i)) {
+        entryNumber = i;
+        break;
+      }
+    }
+  }
 
   if (entryNumber && entryNumber >= 1 && entryNumber <= 19 && isEmergenceEntry && !processedEntries.has(entryNumber)) {
     processedEntries.add(entryNumber);
